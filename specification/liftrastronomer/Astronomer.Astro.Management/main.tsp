@@ -5,7 +5,6 @@ import "@typespec/versioning";
 import "@azure-tools/typespec-autorest";
 import "@azure-tools/typespec-azure-core";
 import "@azure-tools/typespec-azure-resource-manager";
-import "@azure-tools/typespec-providerhub";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;
@@ -42,13 +41,18 @@ model OrganizationResource is TrackedResource<OrganizationProperties> {
   @path
   name: string;
 
-  ...ManagedServiceIdentity;
+  ...Legacy.ManagedServiceIdentityV4Property;
 }
 
 @armResourceOperations
 interface Organizations {
   get is ArmResourceRead<OrganizationResource>;
-  createOrUpdate is ArmResourceCreateOrUpdateAsync<OrganizationResource>;
+  #suppress "@azure-tools/typespec-azure-core/invalid-final-state" "MUST CHANGE ON NEXT UPDATE"
+  @Azure.Core.useFinalStateVia("azure-async-operation")
+  createOrUpdate is ArmResourceCreateOrUpdateAsync<
+    OrganizationResource,
+    LroHeaders = Azure.Core.Foundations.RetryAfterHeader
+  >;
   update is ArmResourcePatchAsync<OrganizationResource, OrganizationProperties>;
   delete is ArmResourceDeleteWithoutOkAsync<OrganizationResource>;
   listByResourceGroup is ArmResourceListByParent<OrganizationResource>;
